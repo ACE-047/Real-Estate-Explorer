@@ -11,9 +11,11 @@ from selenium.webdriver.chrome.options import Options
 def initialize_driver():
     
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Essential for cloud deployment
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
+
+    chrome_options.add_argument("--headless=new") # 'new' is faster and more stable
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
     
     driver = webdriver.Chrome(options=chrome_options)
     
@@ -24,6 +26,7 @@ def initialize_driver():
     # 
     driver = webdriver.Chrome(options=chrome_options)
     driver.get("https://www.nawy.com")
+    
     search_button = driver.find_element(By.XPATH, '//*[@id="header"]/div/div[2]/a[2]')
     search_button.click()
     time.sleep(3)
@@ -37,7 +40,7 @@ def fetch_locations(driver):
     """
     area_button = driver.find_element(By.CLASS_NAME, "see-more")
     area_button.click()
-    time.sleep(3)
+    time.sleep(2.5)
 
     # The panel that appears after clicking "see-more"
     panel = driver.find_element(
@@ -90,7 +93,7 @@ def select_locations(driver, loc_names: list):
 
     def _fresh_options():
         """Re-query the panel every call to avoid stale element references."""
-        panel = WebDriverWait(driver, 10).until(
+        panel = WebDriverWait(driver, 7).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, PANEL_CSS))
         )
         return panel.find_elements(By.CLASS_NAME, 'input-container')
@@ -98,13 +101,13 @@ def select_locations(driver, loc_names: list):
     def _js_click(element):
         """Scroll into view then JS-click — bypasses overlay/intercept issues."""
         driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
-        time.sleep(0.3)
+        time.sleep(1)
         driver.execute_script("arguments[0].click();", element)
 
     def _clear_search():
         """Fully wipe the search bar so the next query starts clean."""
         try:
-            bar = WebDriverWait(driver, 8).until(
+            bar = WebDriverWait(driver, 6).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, SEARCH_BAR_CSS))
             )
             bar.click()
