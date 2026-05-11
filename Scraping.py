@@ -19,6 +19,7 @@ def initialize_driver():
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-background-timer-throttling")
     chrome_options.add_argument("--disable-renderer-backgrounding")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
     driver = webdriver.Chrome(options=chrome_options)
     driver.get("https://www.nawy.com")
