@@ -11,24 +11,25 @@ from selenium.webdriver.chrome.options import Options
 def initialize_driver():
     
     chrome_options = Options()
-
-    chrome_options.add_argument("--headless=new") # 'new' is faster and more stable
-    chrome_options.add_argument("--disable-background-timer-throttling")
-    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
-    chrome_options.add_argument("--disable-renderer-backgrounding")
+    # Optimized for speed and image loading
+    chrome_options.add_argument("--headless=new") 
+    chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
     
-    driver = webdriver.Chrome(options=chrome_options)
-    
-    
-    
-
-    
-    # 
     driver = webdriver.Chrome(options=chrome_options)
     driver.get("https://www.nawy.com")
+    
+    # Handle the privacy banner interceptor
+    try:
+        wait = WebDriverWait(driver, 5)
+        cookie_accept = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, 'privacy-policy')]//following::button | //button[contains(text(), 'Accept')]")))
+        cookie_accept.click()
+    except:
+        pass
     
     search_button = driver.find_element(By.XPATH, '//*[@id="header"]/div/div[2]/a[2]')
     search_button.click()
