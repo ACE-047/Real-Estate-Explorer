@@ -12,16 +12,16 @@ def initialize_driver():
     
     chrome_options = Options()
 
-    chrome_options.add_argument("--headless=new") 
-    chrome_options.add_argument("--window-size=1920,1080") # FIX: Ensures photos are 'visible' to load
+    chrome_options.add_argument("--headless=new") # 'new' is faster and more stable
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
     
-    # Background Throttling Fixes
-    chrome_options.add_argument("--disable-background-timer-throttling")
-    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
-    chrome_options.add_argument("--disable-renderer-backgrounding")
+    driver = webdriver.Chrome(options=chrome_options)
+    
     
     
 
@@ -29,12 +29,6 @@ def initialize_driver():
     # 
     driver = webdriver.Chrome(options=chrome_options)
     driver.get("https://www.nawy.com")
-    try:
-        wait = WebDriverWait(driver, 5)
-        cookie_accept = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, 'privacy-policy')]//following::button | //button[contains(text(), 'Accept')]")))
-        cookie_accept.click()
-    except:
-        pass
     
     search_button = driver.find_element(By.XPATH, '//*[@id="header"]/div/div[2]/a[2]')
     search_button.click()
@@ -286,7 +280,7 @@ def scrape_property_details(driver, all_clinks):
         compounds, ref_no, prices, areas, links, beds, baths, delivery, img
     The 'img' key maps compound_name -> [image_url, ...]
     """
-    img = {"Master Plan": [], "Floor Plan": []}
+    img  = {}
     data = {
         "compounds": [], "ref_no":    [], "prices":   [],
         "areas":     [], "links":     [], "beds":     [],
@@ -351,39 +345,47 @@ def scrape_property_details(driver, all_clinks):
 
             # ── Floor-plan / property images ──────────────────────────────
             # Completely wrapped so ANY failure is silent
-            # --- Inside scrape_property_details(driver, compound_links) ---
+            try:
+                # 1. Find all potential buttons with that specific class
+                img_buttons = driver.find_elements(By.CSS_SELECTOR, "div.sc-8810fe67-0.kElvoW")
 
-# Define the plan types we want to capture
-plan_types = ["Master Plan", "Floor Plan"]
+                for btn in img_buttons:
+                    try:
+                        # Check the text inside the button (where the 'Master Plan' or 'Floor Plan' span lives)
+                        btn_text = btn.text.strip()
+                        
+                        if "Master Plan" in btn_text or "Floor Plan" in btn_text:
+                            
+                            btn.click()
+                            time.sleep(2)  # Wait for the lightbox to open
+                            
+                            # Find the images inside the lightbox
+                            floor_plan_elements = driver.find_elements(By.CSS_SELECTOR, "img.fslightboxs.fslightboxi.fslightbox-opacity-1")
+                            
+                            # Extract links
+                            links_found = [el.get_attribute("src") for el in floor_plan_elements if el.get_attribute("src")]
+                            
+                            if links_found and compound_name != "N/A":
+                                img.setdefault(compound_name, []).extend(links_found)
+                                print(f"  Saved {len(links_found)} links from {btn_text}")
 
-for plan in plan_types:
-    try:
-        # 1. Find the specific button for the plan
-        plan_button = driver.find_element(By.XPATH, f"//div[contains(text(), '{plan}')]")
-        
-        # 2. Use the JavaScript click to avoid intercept errors
-        driver.execute_script("arguments[0].click();", plan_button)
-        time.sleep(2)  # Wait for the images to swap
-        
-        # 3. Find the images currently displayed under this plan
-        plan_images = driver.find_elements(By.CSS_SELECTOR, '.sc-8810fe67-0.kElvoW img')
-        
-        # 4. Store them in your dictionary
-        if plan not in img:
-            img[plan] = []
+                            # IMPORTANT: Close the lightbox so you can click the next button
+                            # Usually, pressing 'Escape' or clicking the background works
+                            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+                            time.sleep(1) 
             
-        for img_tag in plan_images:
-            # Scroll to trigger lazy loading for the photo
-            driver.execute_script("arguments[0].scrollIntoView();", img_tag)
-            time.sleep(0.5)
-            
-            src = img_tag.get_attribute("src")
-            if src and src not in img[plan]:
-                img[plan].append(src)
-                
-    except Exception:
-        # If a specific plan (like Floor Plan) doesn't exist for this unit, skip it
-        continue
+                    except Exception as e:
+                        print(f"Error processing button {btn_text if 'btn_text' in locals() else ''}: {e}")
+            except Exception:
+                pass  # find_elements itself failed — extremely rare, ignore
+
+            # ── Price ─────────────────────────────────────────────────────
+            try:
+                data["prices"].append(
+                    driver.find_element(By.CSS_SELECTOR, ".headline-1.price").text
+                )
+            except Exception:
+                data["prices"].append("N/A")
 
             # ── Area ──────────────────────────────────────────────────────
             try:
