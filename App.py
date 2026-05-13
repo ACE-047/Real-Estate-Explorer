@@ -542,7 +542,7 @@ def png_to_b64(png_bytes: bytes) -> str:
 st.markdown("""
 <div class="nawy-header">
     <div class="ornament">✦ ── ✦ ── ✦</div>
-    <h1>NAWY  REAL  ESTATE  EXPLORER</h1>
+    <h1>REAL  ESTATE  EXPLORER</h1>
     <div class="subtitle">Luxury Property Intelligence · nawy.com</div>
 </div>
 """, unsafe_allow_html=True)
