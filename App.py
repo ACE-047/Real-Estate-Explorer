@@ -543,7 +543,7 @@ st.markdown("""
 <div class="nawy-header">
     <div class="ornament">✦ ── ✦ ── ✦</div>
     <h1>REAL  ESTATE  EXPLORER</h1>
-    <div class="subtitle">Luxury Property Intelligence · nawy.com</div>
+    <div class="subtitle">Luxury Property Intelligence </div>
 </div>
 """, unsafe_allow_html=True)
 
