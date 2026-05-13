@@ -552,7 +552,7 @@ st.markdown("""
 #  SIDEBAR
 # ════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown('<div class="sidebar-logo">✦ NAWY ✦</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-logo">✦ EXPLORE ✦</div>', unsafe_allow_html=True)
 
     # ── Status indicator ─────────────────────────────────────────────────
     dot_class = "status-dot" if st.session_state.busy else "status-dot idle"
