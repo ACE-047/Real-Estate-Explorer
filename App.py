@@ -15,7 +15,7 @@ import base64
 
 # ── Page config (MUST be first Streamlit call) ───────────────────────────────
 st.set_page_config(
-    page_title="Nawy Real Estate Explorer",
+    page_title="Real Estate Explorer",
     page_icon="✦",
     layout="wide",
     initial_sidebar_state="expanded",
